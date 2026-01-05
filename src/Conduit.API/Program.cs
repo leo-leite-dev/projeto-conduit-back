@@ -1,6 +1,7 @@
 using Conduit.Api.Authentication;
 using Conduit.Api.Middleware;
-using Conduit.Application;
+using Conduit.Application.DependencyInjection;
+using Conduit.Infrastructure.Persistence.DependencyInjection;
 using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,7 +22,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddApplication();
+builder.Services.AddApplication().AddInfrastructure(builder.Configuration);
 
 builder
     .Services.AddAuthentication("Bff")

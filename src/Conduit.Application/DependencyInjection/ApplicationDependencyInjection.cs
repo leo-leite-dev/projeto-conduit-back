@@ -1,15 +1,14 @@
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Conduit.Application;
+namespace Conduit.Application.DependencyInjection;
 
-public static class DependencyInjection
+public static class ApplicationDependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
+            cfg.RegisterServicesFromAssembly(typeof(ApplicationDependencyInjection).Assembly);
         });
 
         return services;

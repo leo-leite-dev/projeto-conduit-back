@@ -7,11 +7,11 @@ namespace Conduit.Api.Controllers;
 
 [ApiController]
 [Route("")]
-public sealed class UsersController : ControllerBase
+public sealed class AuthController : ControllerBase
 {
     private readonly AuthServiceClient _authClient;
 
-    public UsersController(AuthServiceClient authClient)
+    public AuthController(AuthServiceClient authClient)
     {
         _authClient = authClient;
     }
@@ -24,8 +24,16 @@ public sealed class UsersController : ControllerBase
         CancellationToken cancellationToken
     )
     {
-        var result = await _authClient.RegisterAsync(request, cancellationToken);
+        var authResult = await _authClient.RegisterAsync(request, cancellationToken);
 
-        return Created(string.Empty, result);
+        var response = new RegisterUserResponse(
+            new UserResponse(
+                Email: request.User.Email,
+                Username: request.User.Username,
+                Token: authResult.AccessToken
+            )
+        );
+
+        return Created(string.Empty, response);
     }
 }

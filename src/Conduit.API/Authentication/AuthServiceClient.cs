@@ -1,3 +1,4 @@
+using Conduit.Api.Authentication.Contracts;
 using Conduit.Api.Contracts.Auth;
 using Conduit.API.Contracts.Errors;
 using Conduit.API.Exceptions;
@@ -13,12 +14,12 @@ public sealed class AuthServiceClient
         _httpClient = httpClient;
     }
 
-    public async Task<RegisterUserResponse> RegisterAsync(
+    public async Task<AuthRegisterResponse> RegisterAsync(
         RegisterUserRequest request,
         CancellationToken ct
     )
     {
-        var response = await _httpClient.PostAsJsonAsync(
+        var httpResponse = await _httpClient.PostAsJsonAsync(
             "/api/auth/register",
             new
             {
@@ -29,21 +30,21 @@ public sealed class AuthServiceClient
             ct
         );
 
-        if (response.IsSuccessStatusCode)
-        {
-            var authResponse =
-                await response.Content.ReadFromJsonAsync<AuthRegisterResponse>(ct)
-                ?? throw new InvalidOperationException("Resposta inválida do AuthService.");
+        if (!httpResponse.IsSuccessStatusCode)
+            throw await CreateException(httpResponse, ct);
 
-            return new RegisterUserResponse(
-                new UserResponse(
-                    authResponse.UserId.ToString(),
-                    request.User.Username,
-                    request.User.Email
-                )
-            );
-        }
+        var authResponse =
+            await httpResponse.Content.ReadFromJsonAsync<AuthRegisterResponse>(ct)
+            ?? throw new InvalidOperationException("Resposta inválida do AuthService.");
 
+        return authResponse;
+    }
+
+    private static async Task<BffHttpException> CreateException(
+        HttpResponseMessage response,
+        CancellationToken ct
+    )
+    {
         ApiErrorResponse? error = null;
 
         if (
@@ -52,9 +53,9 @@ public sealed class AuthServiceClient
         )
             error = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(ct);
 
-        throw new BffHttpException(
+        return new BffHttpException(
             response.StatusCode,
-            error?.Type ?? "unknown_error",
+            error?.Type ?? "auth_service_error",
             error?.Message ?? "Erro ao comunicar com AuthService"
         );
     }
