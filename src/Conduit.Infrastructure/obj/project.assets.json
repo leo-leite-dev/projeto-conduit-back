@@ -3131,7 +3131,6 @@
       "Microsoft.EntityFrameworkCore >= 8.0.0",
       "Microsoft.EntityFrameworkCore.Design >= 8.0.0",
       "Microsoft.EntityFrameworkCore.Relational >= 8.0.0",
-      "Microsoft.Extensions.Configuration.Abstractions >= 8.0.0",
       "Microsoft.Extensions.Configuration.FileExtensions >= 8.0.0",
       "Microsoft.Extensions.Configuration.Json >= 8.0.0",
       "Microsoft.Extensions.Http >= 8.0.0",
@@ -3201,10 +3200,6 @@
             "target": "Package",
             "version": "[8.0.0, )"
           },
-          "Microsoft.Extensions.Configuration.Abstractions": {
-            "target": "Package",
-            "version": "[8.0.0, )"
-          },
           "Microsoft.Extensions.Configuration.FileExtensions": {
             "target": "Package",
             "version": "[8.0.0, )"
@@ -3234,6 +3229,9 @@
         "assetTargetFallback": true,
         "warn": true,
         "frameworkReferences": {
+          "Microsoft.AspNetCore.App": {
+            "privateAssets": "none"
+          },
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }

@@ -3,7 +3,7 @@ using Conduit.Domain.Entities;
 using Conduit.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace Conduit.Infrastructure.Persistence.Articles;
+namespace Conduit.Infrastructure.Persistence.Repositories;
 
 public sealed class ArticleRepository : IArticleRepository
 {
@@ -12,6 +12,12 @@ public sealed class ArticleRepository : IArticleRepository
     public ArticleRepository(ConduitDbContext db)
     {
         _db = db;
+    }
+
+    public async Task AddAsync(Article article, CancellationToken ct)
+    {
+        await _db.Articles.AddAsync(article, ct);
+        await _db.SaveChangesAsync(ct);
     }
 
     public async Task<IReadOnlyList<Article>> GetPagedAsync(
@@ -31,5 +37,10 @@ public sealed class ArticleRepository : IArticleRepository
     public async Task<int> CountAsync(CancellationToken ct)
     {
         return await _db.Articles.CountAsync(ct);
+    }
+
+    public async Task<bool> SlugExistsAsync(string slug, CancellationToken ct)
+    {
+        return await _db.Articles.AnyAsync(a => a.Slug == slug, ct);
     }
 }

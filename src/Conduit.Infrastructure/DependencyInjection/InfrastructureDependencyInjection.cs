@@ -1,6 +1,8 @@
+using Conduit.Application.Abstractions.Auth;
 using Conduit.Application.Abstractions.Repositories;
-using Conduit.Infrastructure.Persistence.Articles;
+using Conduit.Infrastructure.Auth;
 using Conduit.Infrastructure.Persistence.Context;
+using Conduit.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +21,9 @@ public static class InfrastructureDependencyInjection
         );
 
         services.AddScoped<IArticleRepository, ArticleRepository>();
+        services.AddScoped<IProfileRepository, ProfileRepository>();
+
+        services.AddScoped<ICurrentUser, CurrentUser>();
 
         return services;
     }

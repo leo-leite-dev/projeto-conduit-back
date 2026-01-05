@@ -7,33 +7,48 @@ namespace Conduit.Api.Authentication;
 
 public sealed class BffAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
+    private readonly AuthServiceClient _authServiceClient;
+
     public BffAuthenticationHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
-        UrlEncoder encoder
+        UrlEncoder encoder,
+        AuthServiceClient authServiceClient
     )
-        : base(options, logger, encoder) { }
+        : base(options, logger, encoder)
+    {
+        _authServiceClient = authServiceClient;
+    }
 
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         var authorization = Request.Headers.Authorization.ToString();
 
-        if (string.IsNullOrWhiteSpace(authorization))
-            return Task.FromResult(AuthenticateResult.Fail("Sem token"));
+        Logger.LogInformation("BFF Auth header recebido: {Auth}", authorization);
 
-        if (!authorization.StartsWith("Bearer ") && !authorization.StartsWith("Token "))
-            return Task.FromResult(AuthenticateResult.Fail("Formato inválido"));
+        if (string.IsNullOrWhiteSpace(authorization))
+            return AuthenticateResult.Fail("Sem token");
+
+        if (!authorization.StartsWith("Token ", StringComparison.OrdinalIgnoreCase))
+            return AuthenticateResult.Fail("Formato inválido");
+
+        var token = authorization["Token ".Length..].Trim();
+
+        var user = await _authServiceClient.GetCurrentUserAsync(token);
+
+        if (user is null)
+            return AuthenticateResult.Fail("Token inválido");
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, "authenticated-user"),
-            new Claim(ClaimTypes.Name, "AuthenticatedUser"),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.Email, user.Email),
         };
 
         var identity = new ClaimsIdentity(claims, Scheme.Name);
         var principal = new ClaimsPrincipal(identity);
-        var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
-        return Task.FromResult(AuthenticateResult.Success(ticket));
+        return AuthenticateResult.Success(new AuthenticationTicket(principal, Scheme.Name));
     }
 }

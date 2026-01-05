@@ -9,6 +9,7 @@ public sealed class ConduitDbContext : DbContext
         : base(options) { }
 
     public DbSet<Article> Articles => Set<Article>();
+    public DbSet<Profile> Profiles => Set<Profile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

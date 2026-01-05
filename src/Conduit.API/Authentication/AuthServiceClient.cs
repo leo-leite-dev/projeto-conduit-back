@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Conduit.Api.Authentication.Contracts;
 using Conduit.Api.Contracts.Auth;
 using Conduit.API.Contracts.Errors;
@@ -8,10 +9,12 @@ namespace Conduit.Api.Authentication;
 public sealed class AuthServiceClient
 {
     private readonly HttpClient _httpClient;
+    private readonly ILogger<AuthServiceClient> _logger;
 
-    public AuthServiceClient(HttpClient httpClient)
+    public AuthServiceClient(HttpClient httpClient, ILogger<AuthServiceClient> logger)
     {
         _httpClient = httpClient;
+        _logger = logger;
     }
 
     public async Task<AuthRegisterResponse> RegisterAsync(
@@ -19,7 +22,7 @@ public sealed class AuthServiceClient
         CancellationToken ct
     )
     {
-        var httpResponse = await _httpClient.PostAsJsonAsync(
+        var response = await _httpClient.PostAsJsonAsync(
             "/api/auth/register",
             new
             {
@@ -30,14 +33,36 @@ public sealed class AuthServiceClient
             ct
         );
 
-        if (!httpResponse.IsSuccessStatusCode)
-            throw await CreateException(httpResponse, ct);
+        if (!response.IsSuccessStatusCode)
+            throw await CreateException(response, ct);
 
-        var authResponse =
-            await httpResponse.Content.ReadFromJsonAsync<AuthRegisterResponse>(ct)
+        return await response.Content.ReadFromJsonAsync<AuthRegisterResponse>(ct)
             ?? throw new InvalidOperationException("Resposta inválida do AuthService.");
+    }
 
-        return authResponse;
+    public async Task<GetCurrentUserResponse?> GetCurrentUserAsync(
+        string token,
+        CancellationToken ct = default
+    )
+    {
+        _logger.LogInformation("AuthServiceClient: Validating token");
+
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            token
+        );
+
+        var response = await _httpClient.GetAsync("/api/users/me", ct);
+
+        _logger.LogInformation(
+            "AuthServiceClient: Response status {StatusCode}",
+            response.StatusCode
+        );
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadFromJsonAsync<GetCurrentUserResponse>(ct);
     }
 
     private static async Task<BffHttpException> CreateException(

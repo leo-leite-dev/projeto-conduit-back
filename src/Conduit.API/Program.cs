@@ -13,6 +13,8 @@ var authServiceUrl = builder.Configuration["AuthService:BaseUrl"];
 if (string.IsNullOrWhiteSpace(authServiceUrl))
     throw new InvalidOperationException("AuthService:BaseUrl não configurado.");
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddHttpClient<AuthServiceClient>(client =>
 {
     client.BaseAddress = new Uri(authServiceUrl);
@@ -54,6 +56,8 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<EnsureProfileMiddleware>();
 
 app.MapControllers();
 

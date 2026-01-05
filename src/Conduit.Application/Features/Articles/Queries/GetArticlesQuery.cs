@@ -1,6 +1,6 @@
 using Conduit.Application.Abstractions.Results;
 using MediatR;
 
-namespace Conduit.Application.Features.Articles;
+namespace Conduit.Application.Features.Articles.Queries;
 
 public sealed record GetArticlesQuery(int Limit, int Offset) : IRequest<Result<ArticlesResult>>;

@@ -1,9 +1,8 @@
 using Conduit.Application.Abstractions.Repositories;
-
-namespace Conduit.Application.Features.Articles;
-
 using Conduit.Application.Abstractions.Results;
 using MediatR;
+
+namespace Conduit.Application.Features.Articles.Queries;
 
 public sealed class GetArticlesQueryHandler
     : IRequestHandler<GetArticlesQuery, Result<ArticlesResult>>

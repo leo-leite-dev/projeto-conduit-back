@@ -1,5 +1,7 @@
+using Conduit.Api.Contracts.Articles;
 using Conduit.Api.Extensions;
-using Conduit.Application.Features.Articles;
+using Conduit.Api.Mappers;
+using Conduit.Application.Features.Articles.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +27,20 @@ public sealed class ArticlesController : ControllerBase
     {
         var query = new GetArticlesQuery(limit, offset);
         var result = await _mediator.Send(query, ct);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateArticleRequest request,
+        CancellationToken ct = default
+    )
+    {
+        var command = ArticleMapper.ToCommand(request);
+
+        var result = await _mediator.Send(command, ct);
 
         return result.ToActionResult(this);
     }
