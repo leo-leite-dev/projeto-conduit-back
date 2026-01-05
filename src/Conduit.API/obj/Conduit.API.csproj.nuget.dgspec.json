@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\sille\\Desktop\\Projetos\\back\\projeto-conduit-back\\src\\Conduit.API\\Conduit.API.csproj": {}
+    "C:\\Users\\sille\\Desktop\\Projetos\\back\\projeto-conduit-back\\src\\Conduit.Api\\Conduit.API.csproj": {}
   },
   "projects": {
-    "C:\\Users\\sille\\Desktop\\Projetos\\back\\projeto-conduit-back\\src\\Conduit.API\\Conduit.API.csproj": {
+    "C:\\Users\\sille\\Desktop\\Projetos\\back\\projeto-conduit-back\\src\\Conduit.Api\\Conduit.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\sille\\Desktop\\Projetos\\back\\projeto-conduit-back\\src\\Conduit.API\\Conduit.API.csproj",
+        "projectUniqueName": "C:\\Users\\sille\\Desktop\\Projetos\\back\\projeto-conduit-back\\src\\Conduit.Api\\Conduit.API.csproj",
         "projectName": "Conduit.API",
-        "projectPath": "C:\\Users\\sille\\Desktop\\Projetos\\back\\projeto-conduit-back\\src\\Conduit.API\\Conduit.API.csproj",
+        "projectPath": "C:\\Users\\sille\\Desktop\\Projetos\\back\\projeto-conduit-back\\src\\Conduit.Api\\Conduit.API.csproj",
         "packagesPath": "C:\\Users\\sille\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\sille\\Desktop\\Projetos\\back\\projeto-conduit-back\\src\\Conduit.API\\obj\\",
+        "outputPath": "C:\\Users\\sille\\Desktop\\Projetos\\back\\projeto-conduit-back\\src\\Conduit.Api\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\sille\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -124,6 +124,12 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[14.0.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

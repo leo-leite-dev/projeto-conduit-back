@@ -1,39 +1,41 @@
-using System.Text;
-using Conduit.Infrastructure.DependencyInjection;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+using Conduit.Api.Authentication;
+using Conduit.Api.Middleware;
+using Conduit.Application;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+Console.WriteLine($"AuthService:BaseUrl = {builder.Configuration["AuthService:BaseUrl"]}");
 
+var authServiceUrl = builder.Configuration["AuthService:BaseUrl"];
+
+if (string.IsNullOrWhiteSpace(authServiceUrl))
+    throw new InvalidOperationException("AuthService:BaseUrl não configurado.");
+
+builder.Services.AddHttpClient<AuthServiceClient>(client =>
+{
+    client.BaseAddress = new Uri(authServiceUrl);
+});
+
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
 
 builder
-    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-
-            ValidateAudience = true,
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-
-            ValidateLifetime = true,
-
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!)
-            ),
-        };
-    });
+    .Services.AddAuthentication("Bff")
+    .AddScheme<AuthenticationSchemeOptions, BffAuthenticationHandler>("Bff", _ => { });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        "Frontend",
+        policy => policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:4200")
+    );
+});
 
 var app = builder.Build();
 
@@ -43,7 +45,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseCors("Frontend");
+
+app.UseRouting();
+
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
