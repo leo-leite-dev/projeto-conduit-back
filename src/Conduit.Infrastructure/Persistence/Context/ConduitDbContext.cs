@@ -10,6 +10,7 @@ public sealed class ConduitDbContext : DbContext
 
     public DbSet<Article> Articles => Set<Article>();
     public DbSet<Profile> Profiles => Set<Profile>();
+    public DbSet<Follow> Follows => Set<Follow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

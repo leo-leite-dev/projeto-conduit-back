@@ -73,7 +73,22 @@ namespace Conduit.Infrastructure.Persistence.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Articles", (string)null);
+                    b.ToTable("articles", (string)null);
+                });
+
+            modelBuilder.Entity("Conduit.Domain.Entities.Follow", b =>
+                {
+                    b.Property<Guid>("FollowerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FollowedId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("FollowerId", "FollowedId");
+
+                    b.HasIndex("FollowedId");
+
+                    b.ToTable("follows", (string)null);
                 });
 
             modelBuilder.Entity("Conduit.Domain.Entities.Profile", b =>
@@ -104,7 +119,7 @@ namespace Conduit.Infrastructure.Persistence.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Profiles", (string)null);
+                    b.ToTable("profiles", (string)null);
                 });
 
             modelBuilder.Entity("Conduit.Domain.Entities.Article", b =>
@@ -116,6 +131,25 @@ namespace Conduit.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("Conduit.Domain.Entities.Follow", b =>
+                {
+                    b.HasOne("Conduit.Domain.Entities.Profile", "Followed")
+                        .WithMany()
+                        .HasForeignKey("FollowedId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Conduit.Domain.Entities.Profile", "Follower")
+                        .WithMany()
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Followed");
+
+                    b.Navigation("Follower");
                 });
 #pragma warning restore 612, 618
         }

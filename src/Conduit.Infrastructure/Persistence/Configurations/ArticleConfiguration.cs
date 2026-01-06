@@ -6,7 +6,7 @@ public sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
 {
     public void Configure(EntityTypeBuilder<Article> builder)
     {
-        builder.ToTable("Articles");
+        builder.ToTable("articles");
 
         builder.HasKey(a => a.Id);
 

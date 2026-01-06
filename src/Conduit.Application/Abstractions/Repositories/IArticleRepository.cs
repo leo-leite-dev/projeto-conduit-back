@@ -8,4 +8,13 @@ public interface IArticleRepository
     Task<IReadOnlyList<Article>> GetPagedAsync(int limit, int offset, CancellationToken ct);
     Task<int> CountAsync(CancellationToken ct);
     Task<bool> SlugExistsAsync(string slug, CancellationToken ct);
+
+    Task<IReadOnlyList<Article>> GetFeedAsync(
+        string username,
+        int limit,
+        int offset,
+        CancellationToken ct
+    );
+
+    Task<int> CountFeedAsync(string username, CancellationToken ct);
 }

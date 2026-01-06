@@ -6,7 +6,7 @@ public sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
 {
     public void Configure(EntityTypeBuilder<Profile> builder)
     {
-        builder.ToTable("Profiles");
+        builder.ToTable("profiles");
 
         builder.HasKey(p => p.Id);
 

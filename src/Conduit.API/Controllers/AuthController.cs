@@ -36,4 +36,25 @@ public sealed class AuthController : ControllerBase
 
         return Created(string.Empty, response);
     }
+
+    [HttpPost("users/login")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(LoginUserResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<LoginUserResponse>> Login(
+        [FromBody] LoginUserRequest request,
+        CancellationToken cancellationToken
+    )
+    {
+        var authResult = await _authClient.LoginAsync(request, cancellationToken);
+
+        var response = new LoginUserResponse(
+            new UserResponse(
+                Email: request.User.Email,
+                Username: string.Empty,
+                Token: authResult.AccessToken
+            )
+        );
+
+        return Ok(response);
+    }
 }

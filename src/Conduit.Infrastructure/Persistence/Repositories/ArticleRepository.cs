@@ -39,6 +39,39 @@ public sealed class ArticleRepository : IArticleRepository
         return await _db.Articles.CountAsync(ct);
     }
 
+    public async Task<IReadOnlyList<Article>> GetFeedAsync(
+        string username,
+        int limit,
+        int offset,
+        CancellationToken ct
+    )
+    {
+        return await _db
+            .Articles.AsNoTracking()
+            .Where(article =>
+                _db.Follows.Any(f =>
+                    f.Follower.Username == username && f.Followed.Id == article.Author.Id
+                )
+            )
+            .OrderByDescending(a => a.CreatedAt)
+            .Skip(offset)
+            .Take(limit)
+            .ToListAsync(ct);
+    }
+
+    public async Task<int> CountFeedAsync(string username, CancellationToken ct)
+    {
+        return await _db
+            .Articles.AsNoTracking()
+            .CountAsync(
+                article =>
+                    _db.Follows.Any(f =>
+                        f.Follower.Username == username && f.Followed.Id == article.Author.Id
+                    ),
+                ct
+            );
+    }
+
     public async Task<bool> SlugExistsAsync(string slug, CancellationToken ct)
     {
         return await _db.Articles.AnyAsync(a => a.Slug == slug, ct);

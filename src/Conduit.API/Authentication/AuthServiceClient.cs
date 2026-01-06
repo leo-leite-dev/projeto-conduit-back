@@ -22,22 +22,63 @@ public sealed class AuthServiceClient
         CancellationToken ct
     )
     {
-        var response = await _httpClient.PostAsJsonAsync(
-            "/api/auth/register",
-            new
-            {
-                username = request.User.Username,
-                email = request.User.Email,
-                password = request.User.Password,
-            },
-            ct
-        );
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "/api/auth/register",
+                new
+                {
+                    username = request.User.Username,
+                    email = request.User.Email,
+                    password = request.User.Password,
+                },
+                ct
+            );
 
-        if (!response.IsSuccessStatusCode)
-            throw await CreateException(response, ct);
+            if (!response.IsSuccessStatusCode)
+                throw await CreateException(response, ct);
 
-        return await response.Content.ReadFromJsonAsync<AuthRegisterResponse>(ct)
-            ?? throw new InvalidOperationException("Resposta inválida do AuthService.");
+            return await response.Content.ReadFromJsonAsync<AuthRegisterResponse>(ct)
+                ?? throw new InvalidOperationException("Resposta inválida do AuthService.");
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Erro de comunicação com AuthService no register");
+            throw;
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Timeout ao chamar AuthService no register");
+            throw;
+        }
+    }
+
+    public async Task<AuthLoginResponse> LoginAsync(LoginUserRequest request, CancellationToken ct)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "/api/auth/login",
+                new { login = request.User.Email, password = request.User.Password },
+                ct
+            );
+
+            if (!response.IsSuccessStatusCode)
+                throw await CreateException(response, ct);
+
+            return await response.Content.ReadFromJsonAsync<AuthLoginResponse>(ct)
+                ?? throw new InvalidOperationException("Resposta inválida do AuthService.");
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Erro de comunicação com AuthService no login");
+            throw;
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Timeout ao chamar AuthService no login");
+            throw;
+        }
     }
 
     public async Task<GetCurrentUserResponse?> GetCurrentUserAsync(
@@ -45,24 +86,30 @@ public sealed class AuthServiceClient
         CancellationToken ct = default
     )
     {
-        _logger.LogInformation("AuthServiceClient: Validating token");
+        try
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                "Bearer",
+                token
+            );
 
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-            "Bearer",
-            token
-        );
+            var response = await _httpClient.GetAsync("/api/users/me", ct);
 
-        var response = await _httpClient.GetAsync("/api/users/me", ct);
+            if (!response.IsSuccessStatusCode)
+                return null;
 
-        _logger.LogInformation(
-            "AuthServiceClient: Response status {StatusCode}",
-            response.StatusCode
-        );
-
-        if (!response.IsSuccessStatusCode)
-            return null;
-
-        return await response.Content.ReadFromJsonAsync<GetCurrentUserResponse>(ct);
+            return await response.Content.ReadFromJsonAsync<GetCurrentUserResponse>(ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Erro de comunicação com AuthService ao validar token");
+            throw;
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Timeout ao validar token no AuthService");
+            throw;
+        }
     }
 
     private static async Task<BffHttpException> CreateException(

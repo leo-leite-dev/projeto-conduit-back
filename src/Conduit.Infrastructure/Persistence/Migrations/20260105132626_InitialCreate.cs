@@ -12,7 +12,7 @@ namespace Conduit.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Profiles",
+                name: "profiles",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -23,11 +23,11 @@ namespace Conduit.Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Profiles", x => x.Id);
+                    table.PrimaryKey("PK_profiles", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Articles",
+                name: "articles",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -44,29 +44,58 @@ namespace Conduit.Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Articles", x => x.Id);
+                    table.PrimaryKey("PK_articles", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Articles_Profiles_AuthorId",
+                        name: "FK_articles_profiles_AuthorId",
                         column: x => x.AuthorId,
-                        principalTable: "Profiles",
+                        principalTable: "profiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "follows",
+                columns: table => new
+                {
+                    FollowerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    FollowedId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_follows", x => new { x.FollowerId, x.FollowedId });
+                    table.ForeignKey(
+                        name: "FK_follows_profiles_FollowedId",
+                        column: x => x.FollowedId,
+                        principalTable: "profiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_follows_profiles_FollowerId",
+                        column: x => x.FollowerId,
+                        principalTable: "profiles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Articles_AuthorId",
-                table: "Articles",
+                name: "IX_articles_AuthorId",
+                table: "articles",
                 column: "AuthorId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Articles_Slug",
-                table: "Articles",
+                name: "IX_articles_Slug",
+                table: "articles",
                 column: "Slug",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Profiles_Username",
-                table: "Profiles",
+                name: "IX_follows_FollowedId",
+                table: "follows",
+                column: "FollowedId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_profiles_Username",
+                table: "profiles",
                 column: "Username",
                 unique: true);
         }
@@ -75,10 +104,13 @@ namespace Conduit.Infrastructure.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Articles");
+                name: "articles");
 
             migrationBuilder.DropTable(
-                name: "Profiles");
+                name: "follows");
+
+            migrationBuilder.DropTable(
+                name: "profiles");
         }
     }
 }
