@@ -2,6 +2,7 @@ using Conduit.Application.Abstractions.Auth;
 using Conduit.Application.Abstractions.Repositories;
 using Conduit.Application.Abstractions.Results;
 using Conduit.Application.Errors;
+using Conduit.Application.Features.Articles.Results;
 using MediatR;
 
 namespace Conduit.Application.Features.Articles.Queries.Feed;

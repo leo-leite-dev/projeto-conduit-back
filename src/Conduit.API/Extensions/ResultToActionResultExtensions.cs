@@ -13,6 +13,14 @@ public static class ResultToActionResultExtensions
         return MapError(result.Error, controller);
     }
 
+    public static IActionResult ToActionResult(this Result result, ControllerBase controller)
+    {
+        if (result.IsSuccess)
+            return controller.NoContent();
+
+        return MapError(result.Error, controller);
+    }
+
     private static IActionResult MapError(Error error, ControllerBase controller)
     {
         return error.Code switch

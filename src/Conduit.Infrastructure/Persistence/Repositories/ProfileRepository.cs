@@ -14,23 +14,13 @@ public sealed class ProfileRepository : IProfileRepository
         _context = context;
     }
 
-    public async Task<Profile?> GetByUsernameAsync(string username, CancellationToken ct = default)
-    {
-        return await _context.Profiles.FirstOrDefaultAsync(p => p.Username == username, ct);
-    }
-
     public async Task AddAsync(Profile profile, CancellationToken ct = default)
     {
         _context.Profiles.Add(profile);
+    }
 
-        try
-        {
-            await _context.SaveChangesAsync(ct);
-        }
-        catch (DbUpdateException)
-        {
-            // outro request criou o profile ao mesmo tempo
-            // ignora silenciosamente
-        }
+    public async Task<Profile?> GetByUsernameAsync(string username, CancellationToken ct = default)
+    {
+        return await _context.Profiles.FirstOrDefaultAsync(p => p.Username == username, ct);
     }
 }

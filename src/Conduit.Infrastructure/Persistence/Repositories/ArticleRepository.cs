@@ -17,7 +17,18 @@ public sealed class ArticleRepository : IArticleRepository
     public async Task AddAsync(Article article, CancellationToken ct)
     {
         await _db.Articles.AddAsync(article, ct);
-        await _db.SaveChangesAsync(ct);
+    }
+
+    public Task UpdateAsync(Article article, CancellationToken ct)
+    {
+        _db.Articles.Update(article);
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteAsync(Article article, CancellationToken ct)
+    {
+        _db.Articles.Remove(article);
+        return Task.CompletedTask;
     }
 
     public async Task<IReadOnlyList<Article>> GetPagedAsync(
@@ -34,9 +45,12 @@ public sealed class ArticleRepository : IArticleRepository
             .ToListAsync(ct);
     }
 
-    public async Task<int> CountAsync(CancellationToken ct)
+    public async Task<Article?> GetBySlugAsync(string slug, CancellationToken ct)
     {
-        return await _db.Articles.CountAsync(ct);
+        return await _db
+            .Articles.AsNoTracking()
+            .Include(a => a.Author)
+            .FirstOrDefaultAsync(a => a.Slug == slug, ct);
     }
 
     public async Task<IReadOnlyList<Article>> GetFeedAsync(
@@ -57,6 +71,11 @@ public sealed class ArticleRepository : IArticleRepository
             .Skip(offset)
             .Take(limit)
             .ToListAsync(ct);
+    }
+
+    public async Task<int> CountAsync(CancellationToken ct)
+    {
+        return await _db.Articles.CountAsync(ct);
     }
 
     public async Task<int> CountFeedAsync(string username, CancellationToken ct)

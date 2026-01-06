@@ -2,12 +2,11 @@ using Conduit.Application.Abstractions.Auth;
 using Conduit.Application.Abstractions.Repositories;
 using Conduit.Application.Abstractions.Results;
 using Conduit.Application.Errors;
-using Conduit.Application.Features.Articles.Create;
-using Conduit.Application.Tags;
+using Conduit.Application.Features.Articles.Results;
 using Conduit.Domain.Entities;
 using MediatR;
 
-namespace Conduit.Application.Features.Articles.Commands.CreateArticle;
+namespace Conduit.Application.Features.Articles.Commands.Create;
 
 public sealed class CreateArticleCommandHandler
     : IRequestHandler<CreateArticleCommand, Result<CreateArticleResult>>
@@ -35,17 +34,20 @@ public sealed class CreateArticleCommandHandler
         if (!_currentUser.IsAuthenticated)
             return Result<CreateArticleResult>.Failure(AuthErrors.Unauthorized);
 
-        if (command.TagList.Any(tag => !AvailableTags.All.Contains(tag)))
-            return Result<CreateArticleResult>.Failure(ArticleErrors.InvalidTags);
-
         var author = await _profileRepository.GetByUsernameAsync(_currentUser.Username, ct);
+
+        if (author is null)
+        {
+            author = Profile.Create(_currentUser.Username);
+            await _profileRepository.AddAsync(author, ct);
+        }
 
         var article = Article.Create(
             command.Title,
             command.Description,
             command.Body,
             command.TagList,
-            author!,
+            author,
             DateTime.UtcNow
         );
 

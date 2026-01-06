@@ -1,5 +1,6 @@
 using Conduit.Application.Abstractions.Auth;
 using Conduit.Application.Abstractions.Repositories;
+using Conduit.Application.Abstractions.UnitOfWork;
 using Conduit.Infrastructure.Auth;
 using Conduit.Infrastructure.Persistence.Context;
 using Conduit.Infrastructure.Persistence.Repositories;
@@ -22,6 +23,9 @@ public static class InfrastructureDependencyInjection
 
         services.AddScoped<IArticleRepository, ArticleRepository>();
         services.AddScoped<IProfileRepository, ProfileRepository>();
+        services.AddScoped<ICommentRepository, CommentRepository>();
+
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<ICurrentUser, CurrentUser>();
 

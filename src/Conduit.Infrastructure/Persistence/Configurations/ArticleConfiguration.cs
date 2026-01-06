@@ -2,6 +2,8 @@ using Conduit.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+namespace Conduit.Infrastructure.Persistence.Configurations;
+
 public sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
 {
     public void Configure(EntityTypeBuilder<Article> builder)
@@ -16,19 +18,11 @@ public sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
 
         builder.HasIndex(a => a.Slug).IsUnique();
 
-        builder.Property(a => a.Title).IsRequired().HasMaxLength(300);
+        builder.Property(a => a.Title).IsRequired().HasMaxLength(200);
 
         builder.Property(a => a.Description).IsRequired().HasMaxLength(500);
 
         builder.Property(a => a.Body).IsRequired();
-
-        builder
-            .Property(a => a.TagList)
-            .HasConversion(
-                tags => string.Join(',', tags),
-                value => value.Split(',', StringSplitOptions.RemoveEmptyEntries)
-            )
-            .HasColumnName("Tags");
 
         builder.Property(a => a.CreatedAt).IsRequired();
 
@@ -42,8 +36,14 @@ public sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
             .HasOne(a => a.Author)
             .WithMany()
             .HasForeignKey("AuthorId")
+            .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.Property<Guid>("AuthorId").IsRequired();
+        builder
+            .Property(a => a.TagList)
+            .HasConversion(
+                v => string.Join(',', v),
+                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            );
     }
 }

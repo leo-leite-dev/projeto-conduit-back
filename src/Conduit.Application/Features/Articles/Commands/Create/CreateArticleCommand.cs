@@ -1,7 +1,8 @@
 using Conduit.Application.Abstractions.Results;
+using Conduit.Application.Features.Articles.Results;
 using MediatR;
 
-namespace Conduit.Application.Features.Articles.Create;
+namespace Conduit.Application.Features.Articles.Commands.Create;
 
 public sealed record CreateArticleCommand(
     string Title,

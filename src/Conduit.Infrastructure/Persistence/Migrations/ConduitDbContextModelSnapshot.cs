@@ -55,13 +55,12 @@ namespace Conduit.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("TagList")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("Tags");
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -76,6 +75,34 @@ namespace Conduit.Infrastructure.Persistence.Migrations
                     b.ToTable("articles", (string)null);
                 });
 
+            modelBuilder.Entity("Conduit.Domain.Entities.Comment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleId");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("comments", (string)null);
+                });
+
             modelBuilder.Entity("Conduit.Domain.Entities.Follow", b =>
                 {
                     b.Property<Guid>("FollowerId")
@@ -88,7 +115,10 @@ namespace Conduit.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("FollowedId");
 
-                    b.ToTable("follows", (string)null);
+                    b.ToTable("follows", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Follows_Follower_Followed", "\"FollowerId\" <> \"FollowedId\"");
+                        });
                 });
 
             modelBuilder.Entity("Conduit.Domain.Entities.Profile", b =>
@@ -106,13 +136,13 @@ namespace Conduit.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Image")
                         .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -124,6 +154,23 @@ namespace Conduit.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Conduit.Domain.Entities.Article", b =>
                 {
+                    b.HasOne("Conduit.Domain.Entities.Profile", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("Conduit.Domain.Entities.Comment", b =>
+                {
+                    b.HasOne("Conduit.Domain.Entities.Article", null)
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Conduit.Domain.Entities.Profile", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId")

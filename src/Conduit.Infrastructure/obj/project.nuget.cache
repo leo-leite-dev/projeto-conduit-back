@@ -1,9 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "ENYgPGSNrHc=",
+  "dgSpecHash": "0grm5Rf4f60=",
   "success": true,
   "projectFilePath": "C:\\Users\\sille\\Desktop\\Projetos\\back\\projeto-conduit-back\\src\\Conduit.Infrastructure\\Conduit.Infrastructure.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\sille\\.nuget\\packages\\fluentvalidation\\12.1.1\\fluentvalidation.12.1.1.nupkg.sha512",
+    "C:\\Users\\sille\\.nuget\\packages\\fluentvalidation.dependencyinjectionextensions\\12.1.1\\fluentvalidation.dependencyinjectionextensions.12.1.1.nupkg.sha512",
     "C:\\Users\\sille\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\sille\\.nuget\\packages\\mediatr\\14.0.0\\mediatr.14.0.0.nupkg.sha512",
     "C:\\Users\\sille\\.nuget\\packages\\mediatr.contracts\\2.0.1\\mediatr.contracts.2.0.1.nupkg.sha512",

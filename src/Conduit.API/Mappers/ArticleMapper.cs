@@ -1,5 +1,5 @@
 using Conduit.Api.Contracts.Articles;
-using Conduit.Application.Features.Articles.Create;
+using Conduit.Application.Features.Articles.Commands.Create;
 
 namespace Conduit.Api.Mappers;
 
