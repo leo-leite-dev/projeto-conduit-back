@@ -1,5 +1,3 @@
-using Conduit.Domain.Entities;
-
 namespace Conduit.Application.Features.Articles.Results;
 
-public sealed record ArticlesResult(IReadOnlyList<Article> Articles, int Total);
+public sealed record ArticlesResult(IReadOnlyList<ArticleResult> Articles, int ArticlesCount);

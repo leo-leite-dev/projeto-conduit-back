@@ -3,6 +3,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+namespace Conduit.Api.Controllers;
+
 [ApiController]
 [Route("tags")]
 public sealed class TagsController : ControllerBase

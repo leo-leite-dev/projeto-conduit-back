@@ -37,8 +37,19 @@ public sealed class GetFeedArticlesQueryHandler
             ct
         );
 
-        var count = await _articleRepository.CountFeedAsync(_currentUser.Username, ct);
+        var total = await _articleRepository.CountFeedAsync(_currentUser.Username, ct);
 
-        return Result<ArticlesResult>.Success(new ArticlesResult(articles, count));
+        var results = articles
+            .Select(article =>
+                ArticleResultFactory.Create(
+                    article,
+                    favorited: false,
+                    favoritesCount: 0,
+                    isAuthorFollowed: false
+                )
+            )
+            .ToList();
+
+        return Result<ArticlesResult>.Success(new ArticlesResult(results, total));
     }
 }

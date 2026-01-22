@@ -1,4 +1,4 @@
-using Conduit.Application.Errors;
+using Conduit.Domain.Errors;
 using FluentValidation;
 
 namespace Conduit.Application.Features.Articles.Commands.Comments.Edit;

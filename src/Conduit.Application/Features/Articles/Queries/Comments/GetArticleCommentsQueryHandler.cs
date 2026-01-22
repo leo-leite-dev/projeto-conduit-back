@@ -1,7 +1,7 @@
 using Conduit.Application.Abstractions.Repositories;
 using Conduit.Application.Abstractions.Results;
-using Conduit.Application.Errors;
 using Conduit.Application.Features.Articles.Results;
+using Conduit.Domain.Errors;
 using MediatR;
 
 namespace Conduit.Application.Features.Articles.Queries.Comments;

@@ -1,4 +1,4 @@
-using Conduit.Application.Abstractions.Results;
+using Conduit.Domain.Entities.Common;
 
 namespace Conduit.Application.Errors;
 

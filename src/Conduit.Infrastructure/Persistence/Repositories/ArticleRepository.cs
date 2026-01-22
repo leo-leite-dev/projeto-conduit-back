@@ -31,6 +31,14 @@ public sealed class ArticleRepository : IArticleRepository
         return Task.CompletedTask;
     }
 
+    public async Task<Article?> GetBySlugAsync(string slug, CancellationToken ct)
+    {
+        return await _db
+            .Articles.AsNoTracking()
+            .Include(a => a.Author)
+            .FirstOrDefaultAsync(a => a.Slug == slug, ct);
+    }
+
     public async Task<IReadOnlyList<Article>> GetPagedAsync(
         int limit,
         int offset,
@@ -39,18 +47,11 @@ public sealed class ArticleRepository : IArticleRepository
     {
         return await _db
             .Articles.AsNoTracking()
+            .Include(a => a.Author)
             .OrderByDescending(a => a.CreatedAt)
             .Skip(offset)
             .Take(limit)
             .ToListAsync(ct);
-    }
-
-    public async Task<Article?> GetBySlugAsync(string slug, CancellationToken ct)
-    {
-        return await _db
-            .Articles.AsNoTracking()
-            .Include(a => a.Author)
-            .FirstOrDefaultAsync(a => a.Slug == slug, ct);
     }
 
     public async Task<IReadOnlyList<Article>> GetFeedAsync(
@@ -62,9 +63,10 @@ public sealed class ArticleRepository : IArticleRepository
     {
         return await _db
             .Articles.AsNoTracking()
-            .Where(article =>
+            .Include(a => a.Author)
+            .Where(a =>
                 _db.Follows.Any(f =>
-                    f.Follower.Username == username && f.Followed.Id == article.Author.Id
+                    f.Follower.Username == username && f.Followed.Id == a.Author.Id
                 )
             )
             .OrderByDescending(a => a.CreatedAt)

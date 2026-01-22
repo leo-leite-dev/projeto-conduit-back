@@ -1,4 +1,5 @@
 using Conduit.Application.Abstractions.Results;
+using Conduit.Domain.Entities.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Conduit.Api.Extensions;

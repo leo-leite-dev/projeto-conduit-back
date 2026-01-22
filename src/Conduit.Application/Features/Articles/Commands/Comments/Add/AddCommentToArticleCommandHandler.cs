@@ -5,6 +5,7 @@ using Conduit.Application.Abstractions.UnitOfWork;
 using Conduit.Application.Errors;
 using Conduit.Application.Features.Articles.Results;
 using Conduit.Domain.Entities;
+using Conduit.Domain.Errors;
 using MediatR;
 
 namespace Conduit.Application.Features.Articles.Commands.Comments.Add;

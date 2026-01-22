@@ -1,12 +1,13 @@
 using Conduit.Api.Authentication;
-using Conduit.Api.Contracts.Auth;
+using Conduit.Api.Authentication.Contracts.Auth.Login;
+using Conduit.Api.Authentication.Contracts.Auth.Register;
+using Conduit.Api.Contracts.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Conduit.Api.Controllers;
 
 [ApiController]
-[Route("")]
 public sealed class AuthController : ControllerBase
 {
     private readonly AuthServiceClient _authClient;
@@ -16,45 +17,39 @@ public sealed class AuthController : ControllerBase
         _authClient = authClient;
     }
 
-    [HttpPost("users")]
+    [HttpPost("/users")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status201Created)]
-    public async Task<ActionResult<RegisterUserResponse>> Register(
+    public async Task<IActionResult> RegisterUsers(
         [FromBody] RegisterUserRequest request,
-        CancellationToken cancellationToken
+        CancellationToken ct
     )
     {
-        var authResult = await _authClient.RegisterAsync(request, cancellationToken);
+        if (request?.User is null)
+            return BadRequest("Invalid payload");
 
-        var response = new RegisterUserResponse(
-            new UserResponse(
-                Email: request.User.Email,
-                Username: request.User.Username,
-                Token: authResult.AccessToken
-            )
-        );
+        var result = await _authClient.RegisterAsync(request, ct);
 
-        return Created(string.Empty, response);
+        return Created(string.Empty, UserMapper.FromRegister(request, result));
     }
 
-    [HttpPost("users/login")]
+    [HttpPost("/users/login")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(LoginUserResponse), StatusCodes.Status200OK)]
-    public async Task<ActionResult<LoginUserResponse>> Login(
+    public async Task<IActionResult> LoginUsers(
         [FromBody] LoginUserRequest request,
-        CancellationToken cancellationToken
+        CancellationToken ct
     )
     {
-        var authResult = await _authClient.LoginAsync(request, cancellationToken);
+        var result = await _authClient.LoginAsync(request, ct);
+        return Ok(UserMapper.FromLogin(request, result));
+    }
 
-        var response = new LoginUserResponse(
-            new UserResponse(
-                Email: request.User.Email,
-                Username: string.Empty,
-                Token: authResult.AccessToken
-            )
-        );
+    [HttpPost("/users/refresh")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Refresh(CancellationToken ct)
+    {
+        var refreshToken = Request.GetRefreshToken();
+        var result = await _authClient.RefreshAsync(refreshToken, ct);
 
-        return Ok(response);
+        return Ok(new { user = new { token = result.AccessToken } });
     }
 }

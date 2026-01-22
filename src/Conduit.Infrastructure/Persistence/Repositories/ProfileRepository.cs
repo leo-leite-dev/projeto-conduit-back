@@ -16,10 +16,26 @@ public sealed class ProfileRepository : IProfileRepository
 
     public async Task AddAsync(Profile profile, CancellationToken ct = default)
     {
-        _context.Profiles.Add(profile);
+        await _context.Profiles.AddAsync(profile, ct);
+    }
+
+    public Task UpdateAsync(Profile profile, CancellationToken ct = default)
+    {
+        _context.Profiles.Update(profile);
+        return Task.CompletedTask;
     }
 
     public async Task<Profile?> GetByUsernameAsync(string username, CancellationToken ct = default)
+    {
+        return await _context
+            .Profiles.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Username == username, ct);
+    }
+
+    public async Task<Profile?> GetTrackedByUsernameAsync(
+        string username,
+        CancellationToken ct = default
+    )
     {
         return await _context.Profiles.FirstOrDefaultAsync(p => p.Username == username, ct);
     }

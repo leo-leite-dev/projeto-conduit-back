@@ -42,12 +42,6 @@ namespace Conduit.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<bool>("Favorited")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("FavoritesCount")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -73,6 +67,21 @@ namespace Conduit.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("articles", (string)null);
+                });
+
+            modelBuilder.Entity("Conduit.Domain.Entities.ArticleFavorite", b =>
+                {
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ArticleId", "ProfileId");
+
+                    b.HasIndex("ProfileId");
+
+                    b.ToTable("article_favorites", (string)null);
                 });
 
             modelBuilder.Entity("Conduit.Domain.Entities.Comment", b =>
@@ -131,9 +140,6 @@ namespace Conduit.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<bool>("Following")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("Image")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -163,6 +169,25 @@ namespace Conduit.Infrastructure.Persistence.Migrations
                     b.Navigation("Author");
                 });
 
+            modelBuilder.Entity("Conduit.Domain.Entities.ArticleFavorite", b =>
+                {
+                    b.HasOne("Conduit.Domain.Entities.Article", "Article")
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Conduit.Domain.Entities.Profile", "Profile")
+                        .WithMany()
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Article");
+
+                    b.Navigation("Profile");
+                });
+
             modelBuilder.Entity("Conduit.Domain.Entities.Comment", b =>
                 {
                     b.HasOne("Conduit.Domain.Entities.Article", null)
@@ -183,9 +208,9 @@ namespace Conduit.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Conduit.Domain.Entities.Follow", b =>
                 {
                     b.HasOne("Conduit.Domain.Entities.Profile", "Followed")
-                        .WithMany()
+                        .WithMany("Followers")
                         .HasForeignKey("FollowedId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Conduit.Domain.Entities.Profile", "Follower")
@@ -197,6 +222,11 @@ namespace Conduit.Infrastructure.Persistence.Migrations
                     b.Navigation("Followed");
 
                     b.Navigation("Follower");
+                });
+
+            modelBuilder.Entity("Conduit.Domain.Entities.Profile", b =>
+                {
+                    b.Navigation("Followers");
                 });
 #pragma warning restore 612, 618
         }

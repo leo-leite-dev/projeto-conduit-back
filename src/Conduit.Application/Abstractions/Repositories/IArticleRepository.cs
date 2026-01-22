@@ -7,8 +7,8 @@ public interface IArticleRepository
     Task AddAsync(Article article, CancellationToken ct);
     Task UpdateAsync(Article article, CancellationToken ct);
     Task DeleteAsync(Article article, CancellationToken ct);
-    Task<IReadOnlyList<Article>> GetPagedAsync(int limit, int offset, CancellationToken ct);
     Task<Article?> GetBySlugAsync(string slug, CancellationToken ct);
+    Task<IReadOnlyList<Article>> GetPagedAsync(int limit, int offset, CancellationToken ct);
     Task<IReadOnlyList<Article>> GetFeedAsync(
         string username,
         int limit,

@@ -6,17 +6,21 @@ using Conduit.Application.Features.Articles.Commands.Comments.Delete;
 using Conduit.Application.Features.Articles.Commands.Comments.Edit;
 using Conduit.Application.Features.Articles.Commands.Delete;
 using Conduit.Application.Features.Articles.Commands.Edit;
+using Conduit.Application.Features.Articles.Commands.Favorite;
 using Conduit.Application.Features.Articles.Queries.Comments;
 using Conduit.Application.Features.Articles.Queries.Details;
 using Conduit.Application.Features.Articles.Queries.Feed;
 using Conduit.Application.Features.Articles.Queries.Global;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+namespace Conduit.Api.Controllers;
+
 [ApiController]
 [Route("articles")]
-[Authorize]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public sealed class ArticlesController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -53,7 +57,6 @@ public sealed class ArticlesController : ControllerBase
         );
 
         var result = await _mediator.Send(command, ct);
-
         return result.ToActionResult(this);
     }
 
@@ -108,15 +111,15 @@ public sealed class ArticlesController : ControllerBase
 
     [HttpPost("{slug}/comments")]
     public async Task<IActionResult> AddComment(
-        string slug,
-        AddCommentToArticleRequest request,
-        CancellationToken ct
+        [FromRoute] string slug,
+        [FromBody] AddCommentToArticleRequest request,
+        CancellationToken ct = default
     )
     {
         var command = CommentMapper.ToCommand(slug, request);
         var result = await _mediator.Send(command, ct);
 
-        return Ok(result);
+        return result.ToActionResult(this);
     }
 
     [HttpPut("{slug}/comments/{commentId:guid}")]
@@ -128,8 +131,8 @@ public sealed class ArticlesController : ControllerBase
     )
     {
         var command = new EditCommentFromArticleCommand(slug, commentId, request.Comment.Body);
-        var result = await _mediator.Send(command, ct);
 
+        var result = await _mediator.Send(command, ct);
         return result.ToActionResult(this);
     }
 
@@ -155,6 +158,18 @@ public sealed class ArticlesController : ControllerBase
     {
         var query = new GetArticleCommentsQuery(slug);
         var result = await _mediator.Send(query, ct);
+
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost("{slug}/favorite")]
+    public async Task<IActionResult> Favorite(
+        [FromRoute] string slug,
+        CancellationToken ct = default
+    )
+    {
+        var command = new FavoriteArticleCommand(slug);
+        var result = await _mediator.Send(command, ct);
 
         return result.ToActionResult(this);
     }

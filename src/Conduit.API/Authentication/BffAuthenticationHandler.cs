@@ -1,54 +1,108 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Conduit.Api.Authentication;
 
 public sealed class BffAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
-    private readonly AuthServiceClient _authServiceClient;
+    private const string TokenPrefix = "Bearer ";
+
+    private readonly IConfiguration _configuration;
 
     public BffAuthenticationHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
-        AuthServiceClient authServiceClient
+        IConfiguration configuration
     )
         : base(options, logger, encoder)
     {
-        _authServiceClient = authServiceClient;
+        _configuration = configuration;
     }
 
-    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        var authorization = Request.Headers.Authorization.ToString();
+        var path = Request.Path.Value;
 
-        Logger.LogInformation("BFF Auth header recebido: {Auth}", authorization);
-
-        if (string.IsNullOrWhiteSpace(authorization))
-            return AuthenticateResult.Fail("Sem token");
-
-        if (!authorization.StartsWith("Token ", StringComparison.OrdinalIgnoreCase))
-            return AuthenticateResult.Fail("Formato inválido");
-
-        var token = authorization["Token ".Length..].Trim();
-
-        var user = await _authServiceClient.GetCurrentUserAsync(token);
-
-        if (user is null)
-            return AuthenticateResult.Fail("Token inválido");
-
-        var claims = new[]
+        if (
+            path is not null
+            && (
+                path.StartsWith("/users/login")
+                || path.Equals("/users")
+                || path.StartsWith("/api/auth/login")
+                || path.StartsWith("/api/auth/refresh")
+            )
+        )
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Email, user.Email),
-        };
+            return Task.FromResult(AuthenticateResult.NoResult());
+        }
 
-        var identity = new ClaimsIdentity(claims, Scheme.Name);
-        var principal = new ClaimsPrincipal(identity);
+        if (!Request.Headers.TryGetValue("Authorization", out var authorizationHeader))
+        {
+            Logger.LogWarning("🔐 Header Authorization ausente em rota protegida.");
+            return Task.FromResult(AuthenticateResult.Fail("Authorization header ausente"));
+        }
 
-        return AuthenticateResult.Success(new AuthenticationTicket(principal, Scheme.Name));
+        var authorization = authorizationHeader.ToString();
+
+        if (!authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            Logger.LogWarning("❌ Prefixo inválido no Authorization header.");
+            return Task.FromResult(AuthenticateResult.Fail("Formato de token inválido"));
+        }
+
+        var token = authorization["Bearer ".Length..].Trim();
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            Logger.LogWarning("❌ Token vazio após remover Bearer.");
+            return Task.FromResult(AuthenticateResult.Fail("Token vazio"));
+        }
+
+        try
+        {
+            var secret =
+                _configuration["Jwt:SecretKey"]
+                ?? throw new InvalidOperationException("Jwt:SecretKey não configurado");
+
+            var key = Encoding.UTF8.GetBytes(secret);
+
+            var parameters = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ClockSkew = TimeSpan.Zero,
+            };
+
+            var principal = new JwtSecurityTokenHandler().ValidateToken(token, parameters, out _);
+
+            if (!principal.HasClaim(c => c.Type == ClaimTypes.Name))
+            {
+                Logger.LogWarning("❌ Claim Name não encontrada no token.");
+                return Task.FromResult(AuthenticateResult.Fail("Claim obrigatória ausente"));
+            }
+
+            return Task.FromResult(
+                AuthenticateResult.Success(new AuthenticationTicket(principal, Scheme.Name))
+            );
+        }
+        catch (SecurityTokenExpiredException)
+        {
+            Logger.LogWarning("⏰ Token expirado.");
+            return Task.FromResult(AuthenticateResult.Fail("Token expirado"));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "💥 Falha ao validar JWT.");
+            return Task.FromResult(AuthenticateResult.Fail("Token inválido"));
+        }
     }
 }

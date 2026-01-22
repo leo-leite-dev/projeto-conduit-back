@@ -3,6 +3,7 @@ using Conduit.Application.Abstractions.Repositories;
 using Conduit.Application.Abstractions.Results;
 using Conduit.Application.Abstractions.UnitOfWork;
 using Conduit.Application.Errors;
+using Conduit.Domain.Errors;
 using MediatR;
 
 namespace Conduit.Application.Features.Articles.Commands.Comments.Edit;

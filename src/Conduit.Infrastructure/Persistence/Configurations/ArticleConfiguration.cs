@@ -28,10 +28,6 @@ public sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
 
         builder.Property(a => a.UpdatedAt).IsRequired();
 
-        builder.Property(a => a.Favorited).IsRequired();
-
-        builder.Property(a => a.FavoritesCount).IsRequired();
-
         builder
             .HasOne(a => a.Author)
             .WithMany()
@@ -42,8 +38,8 @@ public sealed class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder
             .Property(a => a.TagList)
             .HasConversion(
-                v => string.Join(',', v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                tags => string.Join(',', tags),
+                value => value.Split(',', StringSplitOptions.RemoveEmptyEntries)
             );
     }
 }

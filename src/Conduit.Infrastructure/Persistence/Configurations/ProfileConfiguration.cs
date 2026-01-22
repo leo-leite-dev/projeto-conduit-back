@@ -2,8 +2,6 @@ using Conduit.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Conduit.Infrastructure.Persistence.Configurations;
-
 public sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
 {
     public void Configure(EntityTypeBuilder<Profile> builder)
@@ -22,6 +20,12 @@ public sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
 
         builder.Property(p => p.Image).HasMaxLength(500);
 
-        builder.Property(p => p.Following).IsRequired();
+        builder
+            .HasMany(p => p.Followers)
+            .WithOne(f => f.Followed)
+            .HasForeignKey(f => f.FollowedId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(p => p.Followers).UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

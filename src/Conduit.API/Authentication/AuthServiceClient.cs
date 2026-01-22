@@ -1,8 +1,10 @@
 using System.Net.Http.Headers;
-using Conduit.Api.Authentication.Contracts;
-using Conduit.Api.Contracts.Auth;
+using Conduit.Api.Authentication.Contracts.Auth.Login;
+using Conduit.Api.Authentication.Contracts.Auth.Register;
+using Conduit.Api.Contracts.Auth.Refresh;
 using Conduit.API.Contracts.Errors;
 using Conduit.API.Exceptions;
+using Conduit.Application.User.Results;
 
 namespace Conduit.Api.Authentication;
 
@@ -22,63 +24,35 @@ public sealed class AuthServiceClient
         CancellationToken ct
     )
     {
-        try
-        {
-            var response = await _httpClient.PostAsJsonAsync(
-                "/api/auth/register",
-                new
-                {
-                    username = request.User.Username,
-                    email = request.User.Email,
-                    password = request.User.Password,
-                },
-                ct
-            );
-
-            if (!response.IsSuccessStatusCode)
-                throw await CreateException(response, ct);
-
-            return await response.Content.ReadFromJsonAsync<AuthRegisterResponse>(ct)
-                ?? throw new InvalidOperationException("Resposta inválida do AuthService.");
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "Erro de comunicação com AuthService no register");
-            throw;
-        }
-        catch (TaskCanceledException ex)
-        {
-            _logger.LogError(ex, "Timeout ao chamar AuthService no register");
-            throw;
-        }
+        return await SendAsync<AuthRegisterResponse>(
+            () =>
+                _httpClient.PostAsJsonAsync(
+                    "/api/auth/register",
+                    new
+                    {
+                        username = request.User.Username,
+                        email = request.User.Email,
+                        password = request.User.Password,
+                    },
+                    ct
+                ),
+            "register",
+            ct
+        );
     }
 
     public async Task<AuthLoginResponse> LoginAsync(LoginUserRequest request, CancellationToken ct)
     {
-        try
-        {
-            var response = await _httpClient.PostAsJsonAsync(
-                "/api/auth/login",
-                new { login = request.User.Email, password = request.User.Password },
-                ct
-            );
-
-            if (!response.IsSuccessStatusCode)
-                throw await CreateException(response, ct);
-
-            return await response.Content.ReadFromJsonAsync<AuthLoginResponse>(ct)
-                ?? throw new InvalidOperationException("Resposta inválida do AuthService.");
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "Erro de comunicação com AuthService no login");
-            throw;
-        }
-        catch (TaskCanceledException ex)
-        {
-            _logger.LogError(ex, "Timeout ao chamar AuthService no login");
-            throw;
-        }
+        return await SendAsync<AuthLoginResponse>(
+            () =>
+                _httpClient.PostAsJsonAsync(
+                    "/api/auth/login",
+                    new { login = request.User.Email, password = request.User.Password },
+                    ct
+                ),
+            "login",
+            ct
+        );
     }
 
     public async Task<GetCurrentUserResponse?> GetCurrentUserAsync(
@@ -88,12 +62,11 @@ public sealed class AuthServiceClient
     {
         try
         {
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                "Bearer",
-                token
-            );
+            using var request = new HttpRequestMessage(HttpMethod.Get, "/api/users/me");
 
-            var response = await _httpClient.GetAsync("/api/users/me", ct);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _httpClient.SendAsync(request, ct);
 
             if (!response.IsSuccessStatusCode)
                 return null;
@@ -112,6 +85,51 @@ public sealed class AuthServiceClient
         }
     }
 
+    private async Task<T> SendAsync<T>(
+        Func<Task<HttpResponseMessage>> action,
+        string operation,
+        CancellationToken ct
+    )
+    {
+        try
+        {
+            var response = await action();
+
+            if (!response.IsSuccessStatusCode)
+                throw await CreateException(response, ct);
+
+            return await response.Content.ReadFromJsonAsync<T>(ct)
+                ?? throw new InvalidOperationException(
+                    $"Resposta inválida do AuthService ({operation})."
+                );
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Erro de comunicação com AuthService no {Operation}", operation);
+            throw;
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Timeout ao chamar AuthService no {Operation}", operation);
+            throw;
+        }
+    }
+
+    public async Task<AuthRefreshResponse> RefreshAsync(string refreshToken, CancellationToken ct)
+    {
+        var response = await _httpClient.PostAsJsonAsync(
+            "/api/auth/refresh",
+            new { refreshToken },
+            ct
+        );
+
+        if (!response.IsSuccessStatusCode)
+            throw await CreateException(response, ct);
+
+        return await response.Content.ReadFromJsonAsync<AuthRefreshResponse>(ct)
+            ?? throw new InvalidOperationException("Resposta inválida do AuthService");
+    }
+
     private static async Task<BffHttpException> CreateException(
         HttpResponseMessage response,
         CancellationToken ct
@@ -123,7 +141,9 @@ public sealed class AuthServiceClient
             response.Content.Headers.ContentLength > 0
             && response.Content.Headers.ContentType?.MediaType == "application/json"
         )
+        {
             error = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(ct);
+        }
 
         return new BffHttpException(
             response.StatusCode,

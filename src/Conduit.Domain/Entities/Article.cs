@@ -14,8 +14,7 @@ public sealed class Article
     public IReadOnlyList<string> TagList { get; private init; } = [];
     public DateTime CreatedAt { get; private init; }
     public DateTime UpdatedAt { get; private set; }
-    public bool Favorited { get; private set; }
-    public int FavoritesCount { get; private set; }
+
     public Profile Author { get; private init; } = default!;
 
     private Article() { }
@@ -39,8 +38,6 @@ public sealed class Article
             TagList = tags,
             CreatedAt = now,
             UpdatedAt = now,
-            Favorited = false,
-            FavoritesCount = 0,
             Author = author,
         };
     }

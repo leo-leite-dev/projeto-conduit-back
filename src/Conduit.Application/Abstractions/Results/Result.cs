@@ -1,3 +1,5 @@
+using Conduit.Domain.Entities.Common;
+
 namespace Conduit.Application.Abstractions.Results;
 
 public class Result

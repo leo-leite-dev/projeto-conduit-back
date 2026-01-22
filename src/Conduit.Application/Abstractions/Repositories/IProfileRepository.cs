@@ -5,5 +5,7 @@ namespace Conduit.Application.Abstractions.Repositories;
 public interface IProfileRepository
 {
     Task AddAsync(Profile profile, CancellationToken ct = default);
+    Task UpdateAsync(Profile profile, CancellationToken ct = default);
     Task<Profile?> GetByUsernameAsync(string username, CancellationToken ct = default);
+    Task<Profile?> GetTrackedByUsernameAsync(string username, CancellationToken ct = default);
 }

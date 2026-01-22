@@ -54,6 +54,10 @@
               "target": "Package",
               "version": "[8.0.0, )"
             },
+            "Microsoft.AspNetCore.OpenApi": {
+              "target": "Package",
+              "version": "[8.0.22, )"
+            },
             "Microsoft.EntityFrameworkCore.Design": {
               "suppressParent": "All",
               "target": "Package",
@@ -61,7 +65,7 @@
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
-              "version": "[10.1.0, )"
+              "version": "[6.6.2, )"
             }
           },
           "imports": [

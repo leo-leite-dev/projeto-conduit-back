@@ -1,9 +1,11 @@
 using Conduit.Application.Abstractions.Auth;
 using Conduit.Application.Abstractions.Repositories;
+using Conduit.Application.Abstractions.Time;
 using Conduit.Application.Abstractions.UnitOfWork;
 using Conduit.Infrastructure.Auth;
 using Conduit.Infrastructure.Persistence.Context;
 using Conduit.Infrastructure.Persistence.Repositories;
+using Conduit.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,10 +26,14 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<IArticleRepository, ArticleRepository>();
         services.AddScoped<IProfileRepository, ProfileRepository>();
         services.AddScoped<ICommentRepository, CommentRepository>();
+        services.AddScoped<IArticleFavoriteRepository, ArticleFavoriteRepository>();
+        services.AddScoped<IFollowRepository, FollowRepository>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<ICurrentUser, CurrentUser>();
+
+        services.AddSingleton<IDateTimeProvider, SystemDateTimeProvider>();
 
         return services;
     }
