@@ -1,51 +1,31 @@
-using Conduit.Api.Extensions;
 using Conduit.Application.Features.Profiles.Commands.Follows;
 using Conduit.Application.Features.Profiles.Commands.Unfollows;
 using Conduit.Application.Features.Profiles.Queries;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Conduit.Api.Controllers;
+namespace Conduit.API.Controllers;
 
 [ApiController]
-[Route("api/profiles")]
+[Route("profiles")]
 public sealed class ProfileController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly ISender _sender;
 
-    public ProfileController(IMediator mediator)
+    public ProfileController(ISender sender)
     {
-        _mediator = mediator;
+        _sender = sender;
     }
 
     [HttpGet("{username}")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetProfile([FromRoute] string username, CancellationToken ct)
-    {
-        var query = new GetProfileQuery(username);
-        var result = await _mediator.Send(query, ct);
-
-        return result.ToActionResult(this);
-    }
+    public async Task<IActionResult> Get(string username) =>
+        Ok(await _sender.Send(new GetProfileQuery(username)));
 
     [HttpPost("{username}/follow")]
-    [Authorize]
-    public async Task<IActionResult> Follow([FromRoute] string username, CancellationToken ct)
-    {
-        var command = new FollowProfileCommand(username);
-        var result = await _mediator.Send(command, ct);
-
-        return result.ToActionResult(this);
-    }
+    public async Task<IActionResult> Follow(string username) =>
+        Ok(await _sender.Send(new FollowProfileCommand(username)));
 
     [HttpDelete("{username}/follow")]
-    [Authorize]
-    public async Task<IActionResult> Unfollow([FromRoute] string username, CancellationToken ct)
-    {
-        var command = new UnfollowProfileCommand(username);
-        var result = await _mediator.Send(command, ct);
-
-        return result.ToActionResult(this);
-    }
+    public async Task<IActionResult> Unfollow(string username) =>
+        Ok(await _sender.Send(new UnfollowProfileCommand(username)));
 }

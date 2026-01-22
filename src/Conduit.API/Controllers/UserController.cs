@@ -1,27 +1,20 @@
-using Conduit.Api.Extensions;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Conduit.Api.Controllers;
+namespace Conduit.API.Controllers;
 
 [ApiController]
-[Authorize]
+[Route("user")]
 public sealed class UserController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly ISender _sender;
 
-    public UserController(IMediator mediator)
+    public UserController(ISender sender)
     {
-        _mediator = mediator;
+        _sender = sender;
     }
 
-    [HttpGet("user")]
-    public async Task<IActionResult> GetCurrentUser(CancellationToken ct)
-    {
-        var query = new GetCurrentUserQuery();
-        var result = await _mediator.Send(query, ct);
-
-        return result.ToActionResult(this);
-    }
+    [HttpGet]
+    public async Task<IActionResult> GetCurrent() =>
+        Ok(await _sender.Send(new GetCurrentUserQuery()));
 }

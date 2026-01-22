@@ -1,8 +1,6 @@
-using Conduit.Application.Abstractions.Auth;
 using Conduit.Application.Abstractions.Repositories;
 using Conduit.Application.Abstractions.Time;
 using Conduit.Application.Abstractions.UnitOfWork;
-using Conduit.Infrastructure.Auth;
 using Conduit.Infrastructure.Persistence.Context;
 using Conduit.Infrastructure.Persistence.Repositories;
 using Conduit.Infrastructure.Time;
@@ -30,8 +28,6 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<IFollowRepository, FollowRepository>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-        services.AddScoped<ICurrentUser, CurrentUser>();
 
         services.AddSingleton<IDateTimeProvider, SystemDateTimeProvider>();
 

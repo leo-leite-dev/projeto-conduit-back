@@ -1,10 +1,9 @@
-using System.Net.Http.Headers;
-using Conduit.Api.Authentication;
 using Conduit.Api.Extensions;
 using Conduit.Api.Middlewares;
+using Conduit.API.Security;
+using Conduit.Application.Abstractions.Auth;
 using Conduit.Application.DependencyInjection;
 using Conduit.Infrastructure.Persistence.DependencyInjection;
-using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,26 +14,7 @@ builder.Services.AddSwaggerDocumentation();
 
 builder.Services.AddApplication().AddInfrastructure(builder.Configuration);
 
-builder.Services.AddHttpClient<AuthServiceClient>(client =>
-{
-    client.BaseAddress = new Uri(
-        builder.Configuration["AuthService:BaseUrl"]
-            ?? throw new InvalidOperationException("AuthService:BaseUrl não configurado")
-    );
-
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/json")
-    );
-});
-
-builder
-    .Services.AddAuthentication("Bff")
-    .AddScheme<AuthenticationSchemeOptions, BffAuthenticationHandler>("Bff", _ => { });
-
-builder.Services.AddAuthorization(options =>
-{
-    options.FallbackPolicy = null;
-});
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
 builder.Services.AddCors(options =>
 {
@@ -56,10 +36,9 @@ app.UseCors("Frontend");
 
 app.UseRouting();
 
-app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseMiddleware<GatewayUserHeadersMiddleware>();
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.MapControllers();
 

@@ -1,28 +1,22 @@
-using Conduit.Api.Extensions;
+using Conduit.Application.Tags.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Conduit.Api.Controllers;
+namespace Conduit.API.Controllers;
 
 [ApiController]
 [Route("tags")]
 public sealed class TagsController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly ISender _sender;
 
-    public TagsController(IMediator mediator)
+    public TagsController(ISender sender)
     {
-        _mediator = mediator;
+        _sender = sender;
     }
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> Get(CancellationToken ct)
-    {
-        var query = new GetTagsQuery();
-        var result = await _mediator.Send(query, ct);
-
-        return result.ToActionResult(this);
-    }
+    public async Task<IActionResult> Get() => Ok(await _sender.Send(new GetTagsQuery()));
 }

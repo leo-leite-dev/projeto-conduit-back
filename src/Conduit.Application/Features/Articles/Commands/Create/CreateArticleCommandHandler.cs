@@ -3,6 +3,7 @@ using Conduit.Application.Abstractions.Repositories;
 using Conduit.Application.Abstractions.Results;
 using Conduit.Application.Abstractions.Time;
 using Conduit.Application.Abstractions.UnitOfWork;
+using Conduit.Application.Errors;
 using Conduit.Application.Features.Articles.Commands.Create;
 using Conduit.Application.Features.Articles.Results;
 using Conduit.Domain.Entities;
@@ -38,7 +39,10 @@ public sealed class CreateArticleCommandHandler
         CancellationToken ct
     )
     {
-        var author = await _profileRepository.GetByUsernameAsync(_currentUser.Username, ct);
+        if (!_currentUser.IsAuthenticated)
+            return Result<CreateArticleResult>.Failure(AuthErrors.Unauthorized);
+
+        var author = await _profileRepository.GetByUsernameAsync(_currentUser.Username!, ct);
 
         if (author is null)
             return Result<CreateArticleResult>.Failure(ProfileErrors.NotFound);
